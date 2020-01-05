@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,11 +15,18 @@ import (
 var logger *loggo.Logger
 
 func main() {
+	//
 	newLogger := loggo.GetLogger("main")
 	logger = &newLogger
 
 	logger.Debugf("Gathering Config")
-	_ = config.CollectConfig()
+	cfg := config.CollectConfig()
+
+	err := loggo.ConfigureLoggers(cfg.LoggerConfig)
+	if err != nil {
+		fmt.Printf("Error configurting Logger: %s", err.Error())
+		return
+	}
 
 	// Wait for SIGINT and SIGTERM (HIT CTRL-C)
 	nch := make(chan os.Signal)

@@ -15,11 +15,10 @@ func init() {
 
 	r := mux.NewRouter()
 
-	rWellKnown := r.PathPrefix("/.well-known").Subrouter()
-	rWellKnown.HandleFunc("/nodeinfo", HandleNodeInfoWellKnown).Methods("GET")
+	r.HandleFunc("/.well-known/nodeinfo", HandleNodeInfoWellKnown).Methods("GET")
+	r.HandleFunc("/.well-known/webfinger", HandleWebFinger).Methods("GET")
 
-	rNodeInfo := r.PathPrefix("/nodeinfo").Subrouter()
-	rNodeInfo.HandleFunc("/2.0.json", HandleNodeInfo).Methods("GET")
+	r.HandleFunc("/nodeinfo/2.0.json", HandleNodeInfo).Methods("GET")
 
 	go http.ListenAndServe(":8080", r)
 }
