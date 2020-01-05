@@ -9,7 +9,7 @@ import (
 	"github.com/juju/loggo"
 
 	"github.com/tyrm/go-activitypub-relay/config"
-	_ "github.com/tyrm/go-activitypub-relay/web"
+	"github.com/tyrm/go-activitypub-relay/web"
 )
 
 var logger *loggo.Logger
@@ -27,6 +27,9 @@ func main() {
 		fmt.Printf("Error configurting Logger: %s", err.Error())
 		return
 	}
+
+	// Init Web Server
+	web.Init("")
 
 	// Wait for SIGINT and SIGTERM (HIT CTRL-C)
 	nch := make(chan os.Signal)
