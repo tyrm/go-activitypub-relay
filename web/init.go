@@ -18,5 +18,8 @@ func init() {
 	rWellKnown := r.PathPrefix("/.well-known").Subrouter()
 	rWellKnown.HandleFunc("/nodeinfo", HandleNodeInfoWellKnown).Methods("GET")
 
+	rNodeInfo := r.PathPrefix("/nodeinfo").Subrouter()
+	rNodeInfo.HandleFunc("/2.0.json", HandleNodeInfo).Methods("GET")
+
 	go http.ListenAndServe(":8080", r)
 }

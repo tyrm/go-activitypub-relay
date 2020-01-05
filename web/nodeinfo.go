@@ -2,31 +2,64 @@ package web
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
-type NodeInfoWellKnown struct {
-	Links []NodeInfoWellKnownLink `json:"links"`
+type NodeInfo struct {
+	OpenRegistrations bool             `json:"openRegistrations"`
+	Protocols         []string         `json:"protocols"`
+	Services          NodeInfoServices `json:"services"`
+	Software          NodeInfoSoftware `json:"software"`
+	Usage             NodeInfoUsage    `json:"usage"`
+	Version           string           `json:"version"`
+	Metadata          NodeInfoMetadata `json:"metadata"`
 }
 
-type NodeInfoWellKnownLink struct {
-	Rel  string `json:"rel"`
-	HRef string `json:"href"`
+type NodeInfoServices struct {
+	Inbound  []string `json:"inbound"`
+	Outbound []string `json:"outbound"`
 }
 
-func HandleNodeInfoWellKnown(w http.ResponseWriter, r *http.Request) {
-	logger.Errorf("%v", r)
+type NodeInfoSoftware struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
 
-	nodeInfoLinks := []NodeInfoWellKnownLink{
-		{
-			Rel:  "http://nodeinfo.diaspora.software/ns/schema/2.0",
-			HRef: fmt.Sprintf("https://%s/nodeinfo/2.0.json", r.Host),
+type NodeInfoUsage struct {
+	LocalPosts int                `json:"localPosts"`
+	Users      NodeInfoUsageUsers `json:"users"`
+}
+
+type NodeInfoUsageUsers struct {
+	Total int `json:"total"`
+}
+
+type NodeInfoMetadata struct {
+	Peers []string `json:"peers"`
+}
+
+func HandleNodeInfo(w http.ResponseWriter, r *http.Request) {
+	nodeInfo := NodeInfo{
+		OpenRegistrations: true,
+		Protocols:         []string{"activitypub"},
+		Services: NodeInfoServices{
+			Inbound:  []string{},
+			Outbound: []string{},
 		},
-	}
-
-	nodeInfo := NodeInfoWellKnown{
-		Links: nodeInfoLinks,
+		Software: NodeInfoSoftware{
+			Name:    "activityrelay",
+			Version: "alpha+PettingZoo",
+		},
+		Usage: NodeInfoUsage{
+			LocalPosts: 0,
+			Users: NodeInfoUsageUsers{
+				Total: 1,
+			},
+		},
+		Version: "2.0",
+		Metadata: NodeInfoMetadata{
+			Peers: []string{},
+		},
 	}
 
 	js, err := json.Marshal(nodeInfo)
