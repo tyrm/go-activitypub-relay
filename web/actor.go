@@ -38,6 +38,7 @@ func HandleActor(w http.ResponseWriter, r *http.Request) {
 	// Create Public Key Block
 	asn1Bytes, err := asn1.Marshal(serverRSA.PublicKey)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		logger.Errorf("Error Marshaling Public Key: %s", err.Error())
 	}
 

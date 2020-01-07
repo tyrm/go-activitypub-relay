@@ -29,4 +29,6 @@ func Init(pk *rsa.PrivateKey) {
 	r.HandleFunc("/nodeinfo/2.0.json", HandleNodeInfo).Methods("GET")
 
 	go http.ListenAndServe(":8080", r)
+
+	logger.Tracef("Init(%v)", &pk)
 }

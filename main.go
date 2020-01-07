@@ -6,7 +6,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"database/sql"
-	"encoding/asn1"
 	"encoding/pem"
 	"fmt"
 	"os"
@@ -39,7 +38,7 @@ func main() {
 	models.Init(cfg.DBEngine)
 	defer models.Close()
 
-	//
+	// store server key
 	var serverRSA *rsa.PrivateKey
 
 	// Check for private key
@@ -73,35 +72,9 @@ func main() {
 
 		privateKey = newPrivateKey
 
-		// Create Public Key Block
-		asn1Bytes, err := asn1.Marshal(serverRSA.PublicKey)
-		if err != nil {
-			logger.Errorf("Error Marshaling Public Key: %s", err.Error())
-		}
-
-		var pubPEM = &pem.Block{
-			Type:  "PUBLIC KEY",
-			Bytes: asn1Bytes,
-		}
-
-		var pubBuffer bytes.Buffer
-		err = pem.Encode(&pubBuffer, pubPEM)
-
-		logger.Errorf("%v", pubBuffer.String())
-		newPublicKey, err := models.CreateConfig("public_key", pubBuffer.String())
-		_ = newPublicKey
-
 	} else if err != nil {
 		logger.Errorf("Error Reading Private Key: %s", err.Error())
 	} else {
-		publicKey, _ := models.ReadConfig("public_key")
-		if err != nil {
-			logger.Errorf("Error Reading Public Key: %s", err.Error())
-		}
-
-		logger.Warningf("%v", privateKey)
-		logger.Warningf("%v", publicKey)
-
 		// decode private key
 		privBlock, _ := pem.Decode([]byte(privateKey.Value))
 		if privBlock == nil || privBlock.Type != "PRIVATE KEY" {
@@ -112,8 +85,6 @@ func main() {
 		if err != nil {
 			logger.Errorf("Error parsing Public Key: %v", err)
 		}
-
-		logger.Errorf("Priv Key: %v", priv.PublicKey)
 
 		serverRSA = priv
 	}

@@ -16,8 +16,6 @@ type NodeInfoWellKnownLink struct {
 }
 
 func HandleNodeInfoWellKnown(w http.ResponseWriter, r *http.Request) {
-	logger.Errorf("%v", r)
-
 	nodeInfoLinks := []NodeInfoWellKnownLink{
 		{
 			Rel:  "http://nodeinfo.diaspora.software/ns/schema/2.0",

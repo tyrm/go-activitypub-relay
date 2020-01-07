@@ -20,6 +20,7 @@ FROM config
 WHERE key = $1;`
 
 func ReadConfig(k string) (*Config, error) {
+
 	var id int
 
 	var key string
@@ -30,6 +31,7 @@ func ReadConfig(k string) (*Config, error) {
 
 	err := db.QueryRow(sqlReadConfig, k).Scan(&id, &key, &value, &createdAt, &updatedAt)
 	if err != nil {
+		logger.Tracef("ReadConfig(%s) (nil, %s)", k, err)
 		return nil, err
 	}
 
@@ -41,6 +43,7 @@ func ReadConfig(k string) (*Config, error) {
 		updatedAt: updatedAt,
 	}
 
+	logger.Tracef("ReadConfig(%s) (%v, nil)", k, &newConfig)
 	return newConfig, nil
 }
 
@@ -56,6 +59,7 @@ func CreateConfig(k string, v string) (*Config, error) {
 
 	err := db.QueryRow(sqlCreateConfig, k, v).Scan(&newId, &newCreatedAt, &newUpdatedAt)
 	if err != nil {
+		logger.Tracef("CreateConfig(%s, %s) (nil, %s)", k, v, err)
 		return nil, err
 	}
 
@@ -67,5 +71,6 @@ func CreateConfig(k string, v string) (*Config, error) {
 		updatedAt: newUpdatedAt,
 	}
 
+	logger.Tracef("CreateConfig(%s, %s) (%s, nil)", k, v, &newConfig)
 	return newConfig, nil
 }
