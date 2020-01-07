@@ -1,6 +1,7 @@
 package web
 
 import (
+	"crypto/rsa"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -9,12 +10,15 @@ import (
 
 var (
 	logger *loggo.Logger
-	publicKeyPem string
+	serverRSA *rsa.PrivateKey
 )
 
-func Init(pkp string) {
+func Init(pk *rsa.PrivateKey) {
 	newLogger := loggo.GetLogger("web")
 	logger = &newLogger
+
+	// Save private key
+	serverRSA = pk
 
 	r := mux.NewRouter()
 

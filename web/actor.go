@@ -1,7 +1,10 @@
 package web
 
 import (
+	"bytes"
+	"encoding/asn1"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 )
@@ -32,6 +35,19 @@ type ActorPublicKey struct {
 }
 
 func HandleActor(w http.ResponseWriter, r *http.Request) {
+	// Create Public Key Block
+	asn1Bytes, err := asn1.Marshal(serverRSA.PublicKey)
+	if err != nil {
+		logger.Errorf("Error Marshaling Public Key: %s", err.Error())
+	}
+
+	var pubPEM = &pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: asn1Bytes,
+	}
+
+	var pubBuffer bytes.Buffer
+	err = pem.Encode(&pubBuffer, pubPEM)
 
 	webfinger := Actor{
 		Context: "https://www.w3.org/ns/activitystreams",
@@ -47,7 +63,7 @@ func HandleActor(w http.ResponseWriter, r *http.Request) {
 		PublicKey: ActorPublicKey{
 			ID: fmt.Sprintf("https://%s/actor#main-key", r.Host),
 			Owner: fmt.Sprintf("https://%s/actor", r.Host),
-			PublicKeyPem: publicKeyPem,
+			PublicKeyPem: pubBuffer.String(),
 		},
 		Summary: "ActivityRelay bot",
 		PreferredUsername: "relay",
