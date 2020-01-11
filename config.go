@@ -21,6 +21,7 @@ func CollectConfig() (config Config) {
 		missingEnv = append(missingEnv, "DB_ENGINE")
 	}
 
+	// LOG_LEVEL
 	var envLoggerLevel = os.Getenv("LOG_LEVEL")
 	if envLoggerLevel == "" {
 		config.LoggerConfig = "<root>=INFO"
