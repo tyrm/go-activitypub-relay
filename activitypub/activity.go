@@ -1,4 +1,4 @@
-package models
+package activitypub
 
 type Activity struct {
 	Context interface{} `json:"@context,omitempty"`

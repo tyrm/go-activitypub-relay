@@ -13,6 +13,7 @@ import (
 	"syscall"
 
 	"github.com/juju/loggo"
+	"github.com/juju/loggo/loggocolor"
 
 	"github.com/tyrm/go-activitypub-relay/models"
 	"github.com/tyrm/go-activitypub-relay/web"
@@ -31,6 +32,11 @@ func main() {
 	err := loggo.ConfigureLoggers(cfg.LoggerConfig)
 	if err != nil {
 		fmt.Printf("Error configurting Logger: %s", err.Error())
+		return
+	}
+	_, err = loggo.ReplaceDefaultWriter(loggocolor.NewWriter(os.Stderr))
+	if err != nil {
+		fmt.Printf("Error configurting Color Logger: %s", err.Error())
 		return
 	}
 
