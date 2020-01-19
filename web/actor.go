@@ -34,18 +34,18 @@ func HandleActor(w http.ResponseWriter, r *http.Request) {
 		},
 		Followers: fmt.Sprintf("https://%s/followers", r.Host),
 		Following: fmt.Sprintf("https://%s/following", r.Host),
-		Inbox: fmt.Sprintf("https://%s/inbox", r.Host),
-		Name: "PettingZoo Relay",
-		Type: "Application",
-		ID: fmt.Sprintf("https://%s/actor", r.Host),
+		Inbox:     fmt.Sprintf("https://%s/inbox", r.Host),
+		Name:      "PettingZoo Relay",
+		Type:      "Application",
+		ID:        fmt.Sprintf("https://%s/actor", r.Host),
 		PublicKey: activitypub.PublicKey{
-			ID: fmt.Sprintf("https://%s/actor#main-key", r.Host),
-			Owner: fmt.Sprintf("https://%s/actor", r.Host),
+			ID:           fmt.Sprintf("https://%s/actor#main-key", r.Host),
+			Owner:        fmt.Sprintf("https://%s/actor", r.Host),
 			PublicKeyPem: pubBuffer.String(),
 		},
-		Summary: "ActivityRelay bot",
+		Summary:           "ActivityRelay bot",
 		PreferredUsername: "relay",
-		URL: fmt.Sprintf("https://%s/actor", r.Host),
+		URL:               fmt.Sprintf("https://%s/actor", r.Host),
 	}
 
 	js, err := json.Marshal(webfinger)

@@ -7,9 +7,9 @@ import (
 )
 
 type WebFinger struct {
-	Aliases []string `json:"aliases"`
+	Aliases []string         `json:"aliases"`
 	Links   []WebFingerLinks `json:"links"`
-	Subject string   `json:"subject"`
+	Subject string           `json:"subject"`
 }
 
 type WebFingerLinks struct {
@@ -34,12 +34,12 @@ func HandleWebFinger(w http.ResponseWriter, r *http.Request) {
 		Links: []WebFingerLinks{
 			{
 				HREF: actorURL,
-				Rel: "self",
+				Rel:  "self",
 				Type: "application/activity+json",
 			},
 			{
 				HREF: actorURL,
-				Rel: "self",
+				Rel:  "self",
 				Type: "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"",
 			},
 		},

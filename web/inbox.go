@@ -134,13 +134,13 @@ func HandleInboxFollow(actor *activitypub.Actor, activity *activitypub.Activity,
 	message := activitypub.Activity{
 		Context: "https://www.w3.org/ns/activitystreams",
 		Type:    "Accept",
-		To: []string{actor.ID},
-		Actor: fmt.Sprintf("https://%s/actor", reqHost),
+		To:      []string{actor.ID},
+		Actor:   fmt.Sprintf("https://%s/actor", reqHost),
 		Object: activitypub.Activity{
-			Type: "Follow",
-			ID: activity.ID,
+			Type:   "Follow",
+			ID:     activity.ID,
 			Object: fmt.Sprintf("https://%s/actor", reqHost),
-			Actor: actor.ID,
+			Actor:  actor.ID,
 		},
 		ID: fmt.Sprintf("https://%s/activities/%s", reqHost, uuid.NewV4()),
 	}

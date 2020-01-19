@@ -20,6 +20,7 @@ UPDATE "public"."instances"
 SET approved_at = current_timestamp
 WHERE id = $1
 RETURNING approved_at;`
+
 func (i *Instance) Approve() error {
 
 	var approvedAt time.Time
@@ -34,7 +35,6 @@ func (i *Instance) Approve() error {
 	return nil
 }
 
-
 const sqlCreateInstance = `
 INSERT INTO "public"."instances" (hostname)
 VALUES ($1)
@@ -42,7 +42,6 @@ RETURNING id, joined_at;`
 
 func CreateInstance(h string) (*Instance, error) {
 	var id int
-
 
 	var joinedAt time.Time
 
@@ -53,15 +52,14 @@ func CreateInstance(h string) (*Instance, error) {
 	}
 
 	instance := &Instance{
-		id:         id,
-		Hostname:   h,
-		JoinedAt:   joinedAt,
+		id:       id,
+		Hostname: h,
+		JoinedAt: joinedAt,
 	}
 
 	logger.Tracef("CreateInstance(%s) (%v, nil)", h, &instance)
 	return instance, nil
 }
-
 
 const sqlGetApprovedInstances = `
 SELECT id, hostname, joined_at, approved_at

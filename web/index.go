@@ -8,7 +8,7 @@ import (
 )
 
 type IndexTemplate struct {
-	Description string
+	Description  string
 	InstanceList []string
 }
 
@@ -26,7 +26,6 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-
 		instanceList, err := models.GetApprovedInstances()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -43,8 +42,6 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	//w.Header().Set("Content-Type", "application/json")
 	//w.Write()
 }
-

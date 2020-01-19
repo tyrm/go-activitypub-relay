@@ -50,7 +50,7 @@ func main() {
 	// Check for private key
 	privateKey, err := models.ReadConfig("private_key")
 	if err == sql.ErrNoRows {
-		logger.Errorf("Private Key not in config",)
+		logger.Errorf("Private Key not in config", )
 
 		// Generate RSA key
 		reader := rand.Reader
@@ -94,7 +94,6 @@ func main() {
 
 		serverRSA = priv
 	}
-
 
 	// Init Web Server
 	web.Init(serverRSA)

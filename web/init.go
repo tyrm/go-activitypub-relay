@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	logger *loggo.Logger
+	logger    *loggo.Logger
 	serverRSA *rsa.PrivateKey
 	templates *packr.Box
 

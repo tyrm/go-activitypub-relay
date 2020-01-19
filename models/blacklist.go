@@ -7,7 +7,7 @@ import (
 type BlacklistItem struct {
 	Hostname string
 
-	CreatedAt   time.Time
+	CreatedAt time.Time
 
 	// metadata
 	id int
@@ -32,9 +32,9 @@ func ReadBlacklistItem(h string) (*BlacklistItem, error) {
 	}
 
 	instance := &BlacklistItem{
-		id:         id,
-		Hostname:   hostname,
-		CreatedAt:   createdAt,
+		id:        id,
+		Hostname:  hostname,
+		CreatedAt: createdAt,
 	}
 
 	logger.Tracef("ReadBlacklistItem(%s) (%v, nil)", h, &instance)

@@ -17,8 +17,6 @@ type Signature struct {
 	Signature string
 }
 
-
-
 func IsSignatureValid(r *http.Request, actorURI string) error {
 	actor, err := FetchActor(actorURI)
 	if err != nil {
