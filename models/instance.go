@@ -71,9 +71,10 @@ WHERE approved_at IS NOT NULL;`
 func GetApprovedInstances() (*[]Instance, error) {
 	rows, err := db.Query(sqlGetApprovedInstances)
 	if err != nil {
-		logger.Tracef("GetApprovedInstances(%s) (nil, %s)", err)
+		logger.Tracef("GetApprovedInstances() (nil, %s)", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	var instanceList []Instance
 	for rows.Next() {

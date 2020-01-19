@@ -2,10 +2,13 @@ package web
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/tyrm/go-activitypub-relay/activitypub"
 	"github.com/tyrm/go-activitypub-relay/models"
@@ -33,8 +36,16 @@ func HandleInbox(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO Validate Signature
-
+	// Validate Signature
+	err = activitypub.IsSignatureValid(r, activity.Actor)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	/*if !signatureValid {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}*/
 
 	// Block non Follow Requests from unapproved Instances
 	actor, err := url.Parse(activity.Actor)
@@ -72,7 +83,6 @@ func HandleInbox(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("{}"))
 }
-
 
 func HandleInboxFollow(actor *activitypub.Actor, activity *activitypub.Activity, reqHost string) {
 	inbox := actor.GetActorInbox()
@@ -121,5 +131,19 @@ func HandleInboxFollow(actor *activitypub.Actor, activity *activitypub.Activity,
 		}
 	}
 
+	message := activitypub.Activity{
+		Context: "https://www.w3.org/ns/activitystreams",
+		Type:    "Accept",
+		To: []string{actor.ID},
+		Actor: fmt.Sprintf("https://%s/actor", reqHost),
+		Object: activitypub.Activity{
+			Type: "Follow",
+			ID: activity.ID,
+			Object: fmt.Sprintf("https://%s/actor", reqHost),
+			Actor: actor.ID,
+		},
+		ID: fmt.Sprintf("https://%s/activities/%s", reqHost, uuid.NewV4()),
+	}
 
+	go activitypub.PushMessageToActor(actor, &message, fmt.Sprintf("https://%s/actor#main-key", reqHost))
 }

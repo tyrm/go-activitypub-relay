@@ -2,7 +2,10 @@ package activitypub
 
 import (
 	"bytes"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -46,6 +49,33 @@ func (a *Actor) GetActorInbox() string {
 	return a.Endpoints.SharedInbox
 }
 
+func (a *Actor) GetPublicKey() (*rsa.PublicKey, error) {
+	var parsedKey interface{}
+	var err error
+
+	logger.Tracef("Trying to decode PEM: \"%v\"", a.PublicKey.PublicKeyPem)
+
+	block, _ := pem.Decode([]byte(a.PublicKey.PublicKeyPem))
+	if block == nil {
+		logger.Errorf("failed to parse PEM block containing the public key %s", err)
+		return nil, err
+	}
+
+	if parsedKey, err = x509.ParsePKIXPublicKey(block.Bytes); err != nil {
+		logger.Errorf("Unable to parse RSA public key %s", err)
+		return nil, err
+	}
+
+	var pubKey *rsa.PublicKey
+	var ok bool
+	if pubKey, ok = parsedKey.(*rsa.PublicKey); !ok {
+		logger.Errorf("Unable to parse RSA public key")
+		return nil, err
+	}
+
+	return pubKey, nil
+}
+
 func FetchActor(url string) (*Actor, error) {
 	if a, found := cRemoteActors.Get(url); found {
 		actor := a.(*Actor)
@@ -68,7 +98,7 @@ func FetchActor(url string) (*Actor, error) {
 		return nil, err
 	}
 
-	logger.Debugf(" > Remote Actor Payload > %s", body)
+	logger.Debugf("FetchActor > Remote Actor Payload > %s", body)
 	var actor Actor
 	err = json.Unmarshal([]byte(body), &actor)
 	if err != nil {
@@ -136,5 +166,5 @@ func PushMessageToActor(actor *Actor, message *Activity, outKeyId string) {
 		return
 	}
 
-	logger.Debugf("response %s >> %s", inbox, body)
+	logger.Debugf("response %s >> (%d) %s", inbox, resp.StatusCode, body)
 }
