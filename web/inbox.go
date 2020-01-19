@@ -102,9 +102,14 @@ func HandleInboxFollow(actor *activitypub.Actor, activity *activitypub.Activity,
 	if !exists {
 		logger.Debugf("Adding new instance %s", inboxURL.Host)
 
-		_, err := models.CreateInstance(inboxURL.Host)
+		newInstance, err := models.CreateInstance(inboxURL.Host)
 		if err != nil {
 			logger.Errorf("Could not add instance %s: %s", inboxURL.Host, err.Error())
+			return
+		}
+		err = newInstance.Approve()
+		if err != nil {
+			logger.Errorf("Could not approve instance %s: %s", inboxURL.Host, err.Error())
 			return
 		}
 

@@ -15,6 +15,25 @@ type Instance struct {
 	id int
 }
 
+const sqlApproveInstance = `
+UPDATE "public"."instances"
+SET approved_at = current_timestamp
+WHERE id = $1
+RETURNING approved_at;`
+func (i *Instance) Approve() error {
+
+	var approvedAt time.Time
+
+	err := db.QueryRow(sqlApproveInstance, i.id).Scan(&approvedAt)
+	if err != nil {
+		logger.Tracef("(%v) Approve() (%s)", &i, err)
+		return err
+	}
+
+	logger.Tracef("(%v) Approve() (nil)", &i)
+	return nil
+}
+
 
 const sqlCreateInstance = `
 INSERT INTO "public"."instances" (hostname)
@@ -41,6 +60,44 @@ func CreateInstance(h string) (*Instance, error) {
 
 	logger.Tracef("CreateInstance(%s) (%v, nil)", h, &instance)
 	return instance, nil
+}
+
+
+const sqlGetApprovedInstances = `
+SELECT id, hostname, joined_at, approved_at
+FROM instances
+WHERE approved_at IS NOT NULL;`
+
+func GetApprovedInstances() (*[]Instance, error) {
+	rows, err := db.Query(sqlGetApprovedInstances)
+	if err != nil {
+		logger.Tracef("GetApprovedInstances(%s) (nil, %s)", err)
+		return nil, err
+	}
+
+	var instanceList []Instance
+	for rows.Next() {
+		var id int
+		var hostname string
+		var joinedAt time.Time
+		var approvedAt sql.NullTime
+
+		if err := rows.Scan(&id, &hostname, &joinedAt, &approvedAt); err != nil {
+			logger.Tracef("GetApprovedInstances() (nil, %s)", err)
+			return nil, err
+		}
+
+		instance := Instance{
+			id:         id,
+			Hostname:   hostname,
+			JoinedAt:   joinedAt,
+			ApprovedAt: approvedAt,
+		}
+		instanceList = append(instanceList, instance)
+	}
+
+	logger.Tracef("GetApprovedInstances() (%d, nil)", len(instanceList))
+	return &instanceList, nil
 }
 
 const sqlReadInstance = `

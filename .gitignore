@@ -1,3 +1,6 @@
+# Packr files
+*-packr.go
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
