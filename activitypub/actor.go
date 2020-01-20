@@ -169,10 +169,10 @@ func PushMessageToActor(actor *Actor, message *Activity, outKeyId string) {
 	var headers map[string]string
 	headers = make(map[string]string)
 
+	headers["(request-target)"] = fmt.Sprintf("post %s", inboxURL.Path)
 	headers["Content-Length"] = fmt.Sprintf("%d", buf.Len())
 	headers["Content-Type"] = "application/activity+json"
 	headers["User-Agent"] = "ActivityRelay"
-	headers["(request-target)"] = fmt.Sprintf("post %s", inboxURL.Path)
 
 	signature, err := SignHeaders(headers, serverRSA, outKeyId)
 	if err != nil {

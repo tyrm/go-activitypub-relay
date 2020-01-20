@@ -6,9 +6,11 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/textproto"
+	"sort"
 	"strings"
 )
 
@@ -77,8 +79,13 @@ func SignHeaders(headers map[string]string, key *rsa.PrivateKey, ourKeyId string
 
 	var usedHeaders []string
 	for k, _ := range headersLower {
+		if k == "(request-target)" {
+			continue
+		}
 		usedHeaders = append(usedHeaders, k)
 	}
+	sort.Strings(usedHeaders)
+	usedHeaders = append([]string{"(request-target)"}, usedHeaders...)
 
 	sig := map[string]string{
 		"keyId":     ourKeyId,
@@ -87,6 +94,11 @@ func SignHeaders(headers map[string]string, key *rsa.PrivateKey, ourKeyId string
 	}
 
 	sigstring := buildSigningString2(headers, usedHeaders)
+	if sigstring == "" {
+		logger.Tracef("SignHeaders(%v, %v, %v) (\"\", %s)", &headers, &key, &ourKeyId, "buildSigningString2 returned nothing")
+		return "", errors.New("buildSigningString2 returned nothing")
+	}
+
 	signature, err := signSigningString(sigstring, key)
 	if err != nil {
 		logger.Tracef("SignHeaders(%v, %v, %v) (\"\", %s)", &headers, &key, &ourKeyId, err.Error())
@@ -108,7 +120,18 @@ func SignHeaders(headers map[string]string, key *rsa.PrivateKey, ourKeyId string
 func buildSigningString2(headers map[string]string, usedHeaders []string) string {
 	signingString := ""
 
+	// put request-target first
+	reqTgt, ok := headers["(request-target)"]
+	if !ok {
+		return ""
+	}
+	signingString = signingString + "(request-target): " + reqTgt + "\n"
+
 	for i, h := range usedHeaders {
+		if h == "(request-target)" {
+			continue
+		}
+
 		key := strings.ToLower(h)
 		logger.Tracef("trying to get process: %s", key)
 
