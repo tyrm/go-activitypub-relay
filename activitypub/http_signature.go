@@ -2,9 +2,11 @@ package activitypub
 
 import (
 	"crypto"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"net/textproto"
 	"strings"
@@ -66,6 +68,65 @@ func IsSignatureValid(r *http.Request, actorURI string) error {
 	return nil
 }
 
+func SignHeaders(headers map[string]string, key *rsa.PrivateKey, ourKeyId string) (string, error) {
+	var headersLower map[string]string
+	headersLower = make(map[string]string)
+	for k, v := range headers {
+		headersLower[strings.ToLower(k)] = v
+	}
+
+	var usedHeaders []string
+	for k, _ := range headersLower {
+		usedHeaders = append(usedHeaders, k)
+	}
+
+	sig := map[string]string{
+		"keyId":     ourKeyId,
+		"algorithm": "rsa-sha256",
+		"headers":   strings.Join(usedHeaders, " "),
+	}
+
+	sigstring := buildSigningString2(headers, usedHeaders)
+	signature, err := signSigningString(sigstring, key)
+	if err != nil {
+		logger.Tracef("SignHeaders(%v, %v, %v) (\"\", %s)", &headers, &key, &ourKeyId, err.Error())
+		return "", err
+	}
+	sig["signature"] = string(signature)
+
+	// Make String
+	var chunks []string
+	for k, v := range sig {
+		chunks = append(chunks, fmt.Sprintf("%s=\"%s\"", k, v))
+	}
+
+	sigstr := strings.Join(chunks, ",")
+	logger.Tracef("SignHeaders(%v, %v, %v) (\"%s\", nil)", &headers, &key, &ourKeyId, sigstr)
+	return sigstr, nil
+}
+
+func buildSigningString2(headers map[string]string, usedHeaders []string) string {
+	signingString := ""
+
+	for i, h := range usedHeaders {
+		key := strings.ToLower(h)
+		logger.Tracef("trying to get process: %s", key)
+
+		switch key {
+		default:
+			val := headers[textproto.CanonicalMIMEHeaderKey(h)]
+			signingString = signingString + key + ": " + val
+		}
+
+		if i < len(usedHeaders)-1 {
+			signingString = signingString + "\n"
+		}
+	}
+
+	logger.Tracef("buildSigningString2(%v, %v) \"%s\"", &headers, &usedHeaders, signingString)
+	return signingString
+}
+
 func buildSigningString(r *http.Request, usedHeaders []string) string {
 	signingString := ""
 
@@ -90,6 +151,21 @@ func buildSigningString(r *http.Request, usedHeaders []string) string {
 
 	logger.Tracef("buildSigningString(%v, %v) \"%s\"", &r, &usedHeaders, signingString)
 	return signingString
+}
+
+func signSigningString(sigstring string, key *rsa.PrivateKey) (string, error) {
+	rng := rand.Reader
+	hashed := sha256.Sum256([]byte(sigstring))
+
+	signature, err := rsa.SignPKCS1v15(rng, key, crypto.SHA256, hashed[:])
+	if err != nil {
+		logger.Tracef("signSigningString(%v, %v) (\"\", %v)", len(sigstring), &key, err.Error())
+		return "", err
+	}
+
+	sigstr := base64.StdEncoding.EncodeToString(signature)
+	logger.Tracef("signSigningString(%v, %v) (\"%s\", nil)", len(sigstring), &key, sigstr)
+	return sigstr, nil
 }
 
 func parseSignature(signature string) *Signature {

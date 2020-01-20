@@ -7,11 +7,14 @@ import (
 	"encoding/pem"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/tyrm/go-activitypub-relay/activitypub"
 )
 
 func HandleActor(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+
 	// Create Public Key Block
 	asn1Bytes, err := asn1.Marshal(serverRSA.PublicKey)
 	if err != nil {
@@ -56,4 +59,7 @@ func HandleActor(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+
+	elapsed := time.Since(start)
+	logger.Infof("REQUEST HandleActor () %s", elapsed)
 }

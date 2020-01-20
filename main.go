@@ -15,6 +15,7 @@ import (
 	"github.com/juju/loggo"
 	"github.com/juju/loggo/loggocolor"
 
+	"github.com/tyrm/go-activitypub-relay/activitypub"
 	"github.com/tyrm/go-activitypub-relay/models"
 	"github.com/tyrm/go-activitypub-relay/web"
 )
@@ -94,6 +95,9 @@ func main() {
 
 		serverRSA = priv
 	}
+
+	// Init Activity Pub
+	activitypub.Init(serverRSA)
 
 	// Init Web Server
 	web.Init(serverRSA)
