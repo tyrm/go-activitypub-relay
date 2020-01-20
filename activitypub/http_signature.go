@@ -12,6 +12,8 @@ import (
 	"net/textproto"
 	"sort"
 	"strings"
+
+	"github.com/yukimochi/httpsig"
 )
 
 type Signature struct {
@@ -21,37 +23,33 @@ type Signature struct {
 	Signature string
 }
 
-func IsSignatureValid(r *http.Request, actorURI string) error {
-	actor, err := FetchActor(actorURI)
+func IsSignatureValid(r *http.Request) error {
+	// Add missing host header
+	r.Header.Set("Host", r.Host)
+	verifier, err := httpsig.NewVerifier(r)
 	if err != nil {
-		logger.Tracef("IsSignatureValid(%v) (nil)", &r)
 		return err
 	}
 
+	// Get Algorythm
 	sig := parseSignature(r.Header["Signature"][0])
 	logger.Debugf("sigdata: %s", sig)
 
-	sigstring := buildSigningString(r, sig.Headers)
-	logger.Debugf("sigstring : \"%s\"", sigstring)
+	var algo httpsig.Algorithm
 
-	sigalg := strings.Split(sig.Algorithm, "-")
-	logger.Debugf("sign alg: %s, hash alg: %s", sigalg[0], sigalg[1])
-
-	sigdatadata, err := base64.StdEncoding.DecodeString(sig.Signature)
-	if err != nil {
-		logger.Tracef("IsSignatureValid(%v) (%s)", &r, err.Error())
-		return err
+	switch sig.Algorithm {
+	case "rsa-sha256":
+		algo = httpsig.RSA_SHA256
+	default:
+		logger.Warningf("unkonwn signing algorythm: %s", sig.Algorithm)
 	}
 
-	var alg crypto.Hash
-	var hashed [32]byte
-
-	switch sigalg[1] {
-	case "sha256":
-		alg = crypto.SHA256
-		hashed = sha256.Sum256([]byte(sigstring))
-	default:
-		logger.Warningf("unkonwn signing algorythm: %s", sigalg[0])
+	// Get Actor's Key
+	pubKeyId := verifier.KeyId()
+	actor, err := FetchActor(pubKeyId)
+	if err != nil {
+		logger.Tracef("IsSignatureValid(%v) (nil)", &r)
+		return err
 	}
 
 	pubKey, err := actor.GetPublicKey()
@@ -60,14 +58,12 @@ func IsSignatureValid(r *http.Request, actorURI string) error {
 		return err
 	}
 
-	err = rsa.VerifyPKCS1v15(pubKey, alg, hashed[:], sigdatadata)
+	err = verifier.Verify(pubKey, algo)
 	if err != nil {
 		logger.Tracef("IsSignatureValid(%v) (%s)", &r, err.Error())
 		return err
 	}
-
-	logger.Tracef("IsSignatureValid(%v) (nil)", &r)
-	return nil
+	return err
 }
 
 func SignHeaders(headers map[string]string, key *rsa.PrivateKey, ourKeyId string) (string, error) {

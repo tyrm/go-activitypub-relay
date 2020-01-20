@@ -37,15 +37,11 @@ func HandleInbox(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate Signature
-	err = activitypub.IsSignatureValid(r, activity.Actor)
+	err = activitypub.IsSignatureValid(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	/*if !signatureValid {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}*/
 
 	// Block non Follow Requests from unapproved Instances
 	actor, err := url.Parse(activity.Actor)
