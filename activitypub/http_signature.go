@@ -89,7 +89,7 @@ func SignHeaders(headers map[string]string, key *rsa.PrivateKey, ourKeyId string
 		"headers":   strings.Join(usedHeaders, " "),
 	}
 
-	sigstring := buildSigningString2(headers, usedHeaders)
+	sigstring := buildSigningString(headers, usedHeaders)
 	if sigstring == "" {
 		logger.Tracef("SignHeaders(%v, %v, %v) (\"\", %s)", &headers, &key, &ourKeyId, "buildSigningString2 returned nothing")
 		return "", errors.New("buildSigningString2 returned nothing")
@@ -113,7 +113,7 @@ func SignHeaders(headers map[string]string, key *rsa.PrivateKey, ourKeyId string
 	return sigstr, nil
 }
 
-func buildSigningString2(headers map[string]string, usedHeaders []string) string {
+func buildSigningString(headers map[string]string, usedHeaders []string) string {
 	signingString := ""
 
 	// put request-target first
@@ -143,32 +143,6 @@ func buildSigningString2(headers map[string]string, usedHeaders []string) string
 	}
 
 	logger.Tracef("buildSigningString2(%v, %v) \"%s\"", &headers, &usedHeaders, signingString)
-	return signingString
-}
-
-func buildSigningString(r *http.Request, usedHeaders []string) string {
-	signingString := ""
-
-	for i, h := range usedHeaders {
-		key := strings.ToLower(h)
-		logger.Tracef("trying to get process: %s", key)
-
-		switch key {
-		case "(request-target)":
-			signingString = signingString + key + ": " + strings.ToLower(r.Method) + " " + r.URL.Path
-		case "host":
-			signingString = signingString + key + ": " + r.Host
-		default:
-			val := r.Header[textproto.CanonicalMIMEHeaderKey(h)]
-			signingString = signingString + key + ": " + val[0]
-		}
-
-		if i < len(usedHeaders)-1 {
-			signingString = signingString + "\n"
-		}
-	}
-
-	logger.Tracef("buildSigningString(%v, %v) \"%s\"", &r, &usedHeaders, signingString)
 	return signingString
 }
 
