@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 type WebFinger struct {
@@ -19,6 +20,8 @@ type WebFingerLinks struct {
 }
 
 func HandleWebFinger(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+
 	subject := r.URL.Query().Get("resource")
 
 	if subject != fmt.Sprintf("acct:relay@%s", r.Host) {
@@ -54,4 +57,7 @@ func HandleWebFinger(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+
+	elapsed := time.Since(start)
+	logger.Infof("REQUEST HandleWebFinger (%s) %s", subject, elapsed)
 }

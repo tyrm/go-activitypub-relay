@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 type NodeInfoWellKnown struct {
@@ -16,6 +17,8 @@ type NodeInfoWellKnownLink struct {
 }
 
 func HandleNodeInfoWellKnown(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+
 	nodeInfoLinks := []NodeInfoWellKnownLink{
 		{
 			Rel:  "http://nodeinfo.diaspora.software/ns/schema/2.0",
@@ -35,4 +38,7 @@ func HandleNodeInfoWellKnown(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+
+	elapsed := time.Since(start)
+	logger.Infof("REQUEST HandleActor () %s", elapsed)
 }

@@ -3,6 +3,7 @@ module github.com/tyrm/go-activitypub-relay
 go 1.13
 
 require (
+	github.com/Songmu/go-httpdate v1.0.0
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/gorilla/mux v1.7.3
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect

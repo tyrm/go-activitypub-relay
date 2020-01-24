@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
+	"time"
 
 	"github.com/patrickmn/go-cache"
 	"github.com/satori/go.uuid"
@@ -135,11 +135,6 @@ func FollowRemoteActor(url string, reqHost string) {
 
 func PushMessageToActor(actor *Actor, message *Activity, outKeyId string) {
 	inbox := actor.GetActorInbox()
-	inboxURL, err := url.Parse(inbox)
-	if err != nil {
-		logger.Errorf("Error parsing url: %s", err.Error())
-		return
-	}
 
 	// Encode message to JSON
 	data, err := json.Marshal(message)
@@ -156,30 +151,21 @@ func PushMessageToActor(actor *Actor, message *Activity, outKeyId string) {
 		logger.Errorf("Could not create request: %s", err.Error())
 		return
 	}
-	req.Header.Add("Content-Length", fmt.Sprintf("%d", buf.Len()))
 	req.Header.Add("Content-Type", "application/activity+json")
 	req.Header.Add("User-Agent", "ActivityRelay")
+	req.Header.Add("Date", time.Now().UTC().Format(http.TimeFormat))
 
-
-	for x, _ := range req.Header {
-		logger.Tracef("Saw Header: %s", x)
-	}
 
 	// TODO sign message
-	var headers map[string]string
-	headers = make(map[string]string)
-
-	headers["(request-target)"] = fmt.Sprintf("post %s", inboxURL.Path)
-	headers["Content-Length"] = fmt.Sprintf("%d", buf.Len())
-	headers["Content-Type"] = "application/activity+json"
-	headers["User-Agent"] = "ActivityRelay"
-
-	signature, err := SignHeaders(headers, serverRSA, outKeyId)
+	err = AppendSignature(req, &data, outKeyId, serverRSA)
 	if err != nil {
-		logger.Errorf("Error generating signed headers: %s", err.Error())
+		logger.Errorf("Error signing request: %s", err.Error())
 		return
 	}
-	req.Header.Add("Signature", signature)
+
+	for x, y := range req.Header {
+		logger.Tracef("Saw Header: %s=\"%s\"", x, y)
+	}
 
 	// Do POST
 	client := &http.Client{}

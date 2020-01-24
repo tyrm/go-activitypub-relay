@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 )
 
 type NodeInfo struct {
@@ -39,6 +40,8 @@ type NodeInfoMetadata struct {
 }
 
 func HandleNodeInfo(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+
 	nodeInfo := NodeInfo{
 		OpenRegistrations: true,
 		Protocols:         []string{"activitypub"},
@@ -70,4 +73,7 @@ func HandleNodeInfo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+
+	elapsed := time.Since(start)
+	logger.Infof("REQUEST HandleNodeInfo () %s", elapsed)
 }
